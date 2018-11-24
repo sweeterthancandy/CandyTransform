@@ -32,27 +32,65 @@ namespace CandyTransform{
             >
         >;
 
+        /*
+         * Transforms are to be typed, so this just earses that, and does run time
+         * type checking for sugar
+         */
         struct TransformBase{
                 virtual ~TransformBase()=default;
+                virtual void ApplyImpl(TransformControl* ctrl)=0;
+        protected:
                 virtual boost::typeindex::type_index GetInType()const=0;
                 virtual boost::typeindex::type_index GetOutType()const=0;
-                virtual void ApplyImpl(TransformControl* ctrl)=0;
         };
 
 
+        /*
+         * This is what is passed to transform
+         */
         struct TransformControl{
                 virtual ~TransformControl()=default;
+                /*
+                 *  Emit, as in the continuation programming model
+                 *
+                 *  template<class C>
+                 *  void sqrt(C&c, double x){
+                 *      c( +std::sqrt(x) );
+                 *      c( -std::sqrt(x) );
+                 *  }
+                 *
+                 *  template<class C>
+                 *  void for_each(C& c, std::vector<std::string const>& v){
+                 *      for(auto const& _ : v){
+                 *          c(_);
+                 *      }
+                 *  }
+                 */
                 virtual void Emit(AnyType const& val)=0;
+                /*
+                 * End this path
+                 */
                 virtual void Error(std::string const& msg)=0;
+                /*
+                 * Be explisit of the continuation
+                 */
                 virtual void Next(std::shared_ptr<TransformBase> ptr)=0;
+                /*
+                 * Retreive an argument
+                 */
                 virtual AnyType& Arg(size_t idx=0)=0;
+                /*
+                 * find out how deep we are in the path
+                 */
                 virtual size_t Depth()const=0;
         };
 
         template<class In_,class Out_>
         struct Transform : TransformBase{
+                using ParamType = In_&;
+                virtual void Apply(TransformControl* ctrl, ParamType in)=0;
+        protected:
                 virtual void ApplyImpl(TransformControl* ctrl)override{
-
 
                         auto& arg0 = ctrl->Arg(0);
                         if( te::typeid_of(arg0) != GetInType()){
@@ -64,8 +102,6 @@ namespace CandyTransform{
                         }
                         this->Apply( ctrl, te::any_cast<ParamType>(ctrl->Arg(0)) );
                 }
-                using ParamType = In_&;
-                virtual void Apply(TransformControl* ctrl, ParamType in)=0;
                 
                 virtual boost::typeindex::type_index GetInType()const{
                         return boost::typeindex::type_id<In_>().type_info();
@@ -75,8 +111,21 @@ namespace CandyTransform{
                 }
         };
 
+        /*
+         * This library is designed to run execution on paths. A path can either 
+         * be know before it is started, ei
+         *           startup() -> do_this() -> do_that() -> shutdown(),
+         * or the complete path might not be known untill runtime, in that case 
+         * we only have an inital path(), and the path() is decided as the path
+         * is traversed. An intended application is an algebraic solver, for which
+         * the path is dependant on the clasification of the problem, and many
+         * paths which are unsuccessfull.
+         */
         struct TransformPath{
 
+                /* 
+                 * This is used to declare the path statically
+                 */
                 TransformPath* Next(std::shared_ptr<TransformBase> trans){
                         auto next = std::make_shared<TransformPath>();
                         // depth_, in_ is set jit
