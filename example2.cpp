@@ -156,56 +156,6 @@ namespace {
                                 op->Emit( [&](auto&& f){ ctrl->Emit(f); }, in);
                         }
                         
-                        #if 0
-                        std::vector<size_t> p(in.numbers.size());
-                        p[0] = 1;
-                        p[1] = 1;
-                        std::sort(p.begin(), p.end());
-                        do{
-                                Factorization proto;
-                                proto.target = in.target;
-                                std::vector<size_t> v;
-                                for(size_t idx=0;idx!=in.numbers.size();++idx){
-                                        if( p[idx] ){
-                                                v.push_back(idx);
-                                                continue;
-                                        }
-                                        proto.numbers.push_back( in.numbers[idx] );
-                                        proto.tokens.push_back( in.tokens[idx] );
-                                }
-
-                                auto a = in.numbers[v[0]];
-                                auto a_s = in.tokens[v[0]];
-                                auto b = in.numbers[v[1]];
-                                auto b_s = in.tokens[v[1]];
-
-                                Factorization add = proto;
-                                add.numbers.push_back( a + b);
-                                add.tokens.push_back( "(" + a_s + "+" + b_s + ")");
-                                ctrl->Emit(add);
-
-                                Factorization mul = proto;
-                                mul.numbers.push_back( a * b );
-                                mul.tokens.push_back( "(" + a_s + "*" +  b_s + ")");
-                                ctrl->Emit(mul);
-                                
-                                if( b != 0 ){
-                                        Factorization lmod = proto;
-                                        lmod.numbers.push_back(  a % b );
-                                        lmod.tokens.push_back( "(" + a_s + "*" +  b_s + ")");
-                                        ctrl->Emit(lmod);
-                                }
-                                if( a != 0 ){
-                                        Factorization rmod = proto;
-                                        rmod.numbers.push_back(  b % a );
-                                        rmod.tokens.push_back( "(" + b_s + "*" +  a_s + ")");
-                                        ctrl->Emit(rmod);
-                                }
-
-
-
-                        }while(std::next_permutation(p.begin(), p.end()));
-                        #endif
 
                         ctrl->DeclPath()->Next(std::make_shared<F>());
                 }
