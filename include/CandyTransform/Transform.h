@@ -49,7 +49,7 @@ namespace CandyTransform{
                 std::vector<GEdge const*> EdgePath()const{
                         std::vector<GEdge const*> rpath;
                         GNode const* head = this;
-                        for(;; ){
+                        for(;;){
                                 // assume tree
                                 if( head->in_.size() != 1 ){
                                         break;
@@ -126,6 +126,7 @@ namespace CandyTransform{
                         return iter->second;
                 }
         };
+
 
 
 
@@ -279,7 +280,9 @@ namespace CandyTransform{
                 virtual size_t Depth()const{ return depth_; }
 
                 virtual std::shared_ptr<PathDecl> DeclPath(){
-                        return std::make_shared<GraphPathDecl>(G, N, T);
+                        if( M == nullptr )
+                                M = G->Node("aux");
+                        return std::make_shared<GraphPathDecl>(G, M, T);
                 }
                 virtual void Continue()override{
                         E.push_back(A);
@@ -291,6 +294,7 @@ namespace CandyTransform{
                 // arguments into the transform
                 AnyType A;
 
+                GNode* M{nullptr};
 
 
                 // emitted "return" data
@@ -376,10 +380,11 @@ namespace CandyTransform{
                                         std::cout << "t->Name() => " << t->Name() << "\n"; // __CandyPrint__(cxx-print-scalar,t->Name())
                                         t->ApplyImpl(&ctrl);
 
-                                        for(auto const& _ : ctrl.E ){
-                                                q.push(StackItem{e->To(), _, s.depth +1 });
-                                                std::cout << "pushing\n";
+                                        GNode* n  = ( ctrl.M ? ctrl.M : e->To() );
+                                        for( auto const& _ : ctrl.E ){
+                                                q.push(StackItem{n, _, s.depth +1 });
                                         }
+
                                 }
                         }
 
