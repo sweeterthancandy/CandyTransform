@@ -48,6 +48,16 @@ int main(){
                         }while(std::next_permutation(s.begin(), s.end()));
                 }
         };
+        struct MaybeStop : Transform<std::string, std::string>{ 
+                MaybeStop(){
+                        SetName("MaybeStop");
+                }
+                virtual void Apply(TransformControl* ctrl, ParamType in){
+                        if( in[0] != '2' ){
+                                ctrl->Continue();
+                        }
+                }
+        };
         struct Print : Transform<std::string, std::string>{
                 Print(){
                         SetName("Print");
@@ -60,6 +70,7 @@ int main(){
         auto path = ctx.Start();
         path->Next(std::make_shared<ToString>())
             ->Next(std::make_shared<AllPerms>())
+            ->Next(std::make_shared<MaybeStop>())
             ->Next(std::make_shared<TimesTwo>())
         ;
         for(auto const& result : ctx.Execute<std::string>(int{241}) ){

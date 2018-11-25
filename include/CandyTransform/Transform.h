@@ -210,7 +210,17 @@ namespace CandyTransform{
                 virtual size_t Depth()const=0;
 
                 virtual std::shared_ptr<PathDecl> DeclPath()=0;
+
+                // emit in arguments, ie
+                //
+                //    template<class C, class T>
+                //    void f(C& c, T&& t){
+                //        sideeffect();
+                //        c(t);
+                //    }
+                virtual void Continue()=0;
                 
+                // todo
                 virtual void ClearPath(){}
         };
 
@@ -270,6 +280,9 @@ namespace CandyTransform{
 
                 virtual std::shared_ptr<PathDecl> DeclPath(){
                         return std::make_shared<GraphPathDecl>(G, N, T);
+                }
+                virtual void Continue()override{
+                        E.push_back(A);
                 }
 
                 Graph* G;
