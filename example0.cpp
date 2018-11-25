@@ -54,7 +54,7 @@ int main(){
                 }
                 virtual void Apply(TransformControl* ctrl, ParamType in){
                         if( in[0] != '2' ){
-                                ctrl->Continue();
+                                ctrl->Pass();
                         }
                 }
         };
