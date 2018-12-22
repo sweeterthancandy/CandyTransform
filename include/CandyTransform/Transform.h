@@ -314,6 +314,7 @@ namespace CandyTransform{
         };
 
         struct TransformContext{
+                enum{ Debug = false };
                 TransformContext(){
                         head_ = G.Node("start");
                 }
@@ -362,15 +363,19 @@ namespace CandyTransform{
 
                         std::vector<Out> result;
 
-                        std::cout << "head_->OutEdges().size() => " << head_->OutEdges().size() << "\n"; // __CandyPrint__(cxx-print-scalar,head_->OutEdges().size())
+                        if( Debug ){
+                                std::cout << "head_->OutEdges().size() => " << head_->OutEdges().size() << "\n"; // __CandyPrint__(cxx-print-scalar,head_->OutEdges().size())
+                        }
 
                         for(;q.size();){
                                 auto s = q.top();
                                 q.pop();
 
-                                std::cout << "q.size() => " << q.size() << "\n"; // __CandyPrint__(cxx-print-scalar,q.size())
-                                std::cout << "s.node->OutEdges().size() => " << s.node->OutEdges().size() << "\n"; // __CandyPrint__(cxx-print-scalar,s.node->OutEdges().size())
-                                std::cout << "s => " << s << "\n"; // __CandyPrint__(cxx-print-scalar,s)
+                                if( Debug ){
+                                        std::cout << "q.size() => " << q.size() << "\n"; // __CandyPrint__(cxx-print-scalar,q.size())
+                                        std::cout << "s.node->OutEdges().size() => " << s.node->OutEdges().size() << "\n"; // __CandyPrint__(cxx-print-scalar,s.node->OutEdges().size())
+                                        std::cout << "s => " << s << "\n"; // __CandyPrint__(cxx-print-scalar,s)
+                                }
 
                                 if( q.size() > MaxQueueSize )
                                         throw std::domain_error("stack too large " + boost::lexical_cast<std::string>(q.size()));
@@ -394,7 +399,9 @@ namespace CandyTransform{
                                         ctrl.depth_ = s.depth;
 
 
-                                        std::cout << "t->Name() => " << t->Name() << "\n"; // __CandyPrint__(cxx-print-scalar,t->Name())
+                                        if( Debug ){
+                                                std::cout << "t->Name() => " << t->Name() << "\n"; // __CandyPrint__(cxx-print-scalar,t->Name())
+                                        }
                                         t->ApplyImpl(&ctrl);
 
                                         if( ctrl.return_ ){
