@@ -142,7 +142,7 @@ namespace CandyTransform{
         using AnyType = te::any<
             mpl::vector<
                 te::typeid_<>,
-                te::ostreamable<>,
+                //te::ostreamable<>,
                 te::copy_constructible<>,
                 te::assignable<>,
                 // so that it can hold nothing
@@ -330,7 +330,7 @@ namespace CandyTransform{
                         {}
                         friend std::ostream& operator<<(std::ostream& ostr,                 StackItem const& self){
                                 ostr << "node = " << self.node;
-                                ostr << ", A = " << self.A;
+                                //ostr << ", A = " << self.A;
                                 ostr << ", depth = " << self.depth;
                                 return ostr;
                         }
@@ -344,13 +344,18 @@ namespace CandyTransform{
                         }
                 };
 
+                enum Flags{
+                        F_AggregateReturn = 1,
+                        F_ReturnTerminals = 2,
+                };
+                size_t flags_ = F_AggregateReturn | F_ReturnTerminals;
+
                 template<class Out, class In>
                 std::vector<Out> Execute(In const& val){
                         GraphColouring<std::vector<AnyType> > D;
                         D[head_].push_back(val);
 
                         std::priority_queue<StackItem> q;
-                        std::vector<StackItem> terminals;
                         q.push(StackItem{head_, val, 0});
                                 
                         enum{ MaxQueueSize = 1000 };
@@ -372,7 +377,9 @@ namespace CandyTransform{
 
 
                                 if( s.node->OutEdges().empty() ){
-                                        terminals.push_back(s);
+                                        if( flags_ & F_AggregateReturn ){
+                                                result.push_back(te::any_cast<Out>(s.A));
+                                        }
                                         continue;
                                 }
 
@@ -384,12 +391,19 @@ namespace CandyTransform{
                                         ctrl.N = e->To();
                                         ctrl.T = & T;
                                         ctrl.A = s.A;
+                                        ctrl.depth_ = s.depth;
+
 
                                         std::cout << "t->Name() => " << t->Name() << "\n"; // __CandyPrint__(cxx-print-scalar,t->Name())
                                         t->ApplyImpl(&ctrl);
 
                                         if( ctrl.return_ ){
-                                                return std::vector<Out>{te::any_cast<Out>(ctrl.return_.get())};
+                                                if( flags_ & F_AggregateReturn ){
+                                                        result.push_back(te::any_cast<Out>(ctrl.return_.get()));
+                                                        continue;
+                                                } else {
+                                                        return std::vector<Out>{te::any_cast<Out>(ctrl.return_.get())};
+                                                }
                                         }
 
                                         GNode* n  = ( ctrl.M ? ctrl.M : e->To() );
@@ -398,10 +412,6 @@ namespace CandyTransform{
                                         }
 
                                 }
-                        }
-
-                        for(auto const& t : terminals){
-                                result.push_back(te::any_cast<Out>(t.A));
                         }
 
                         return result;
